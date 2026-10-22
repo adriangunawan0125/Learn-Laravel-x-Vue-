@@ -40,6 +40,7 @@ public function store(\Illuminate\Http\Request $request)
 }
 
 
+
     public function edit(Produk $produk)
 {
     return Inertia::render('Produk/Edit', [

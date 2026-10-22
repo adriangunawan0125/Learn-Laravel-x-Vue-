@@ -1,6 +1,7 @@
 
 <script setup>
 import { Link, useForm } from '@inertiajs/vue3';
+import AppLayout from '../../layouts/AppLayout.vue';
 
 const form = useForm({
     nama: '',
@@ -9,216 +10,134 @@ const form = useForm({
     stok: 0,
 });
 
-const submit = () => {
+function submit() {
     form.post('/produk');
-};
+}
 </script>
 
 <template>
-    <main class="container">
-        <header class="header">
-            <div>
-                <h1>Tambah Produk</h1>
-                <p>Masukkan informasi produk inventaris kamu.</p>
-            </div>
-
-            <Link href="/produk" class="btn-back">
-                Kembali
+    <AppLayout>
+        <section class="mb-8">
+            <Link href="/produk" class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-blue-600">
+                <span>←</span> Kembali ke produk
             </Link>
-        </header>
+            <div class="mt-4">
+                <p class="text-sm font-semibold text-blue-600">Manajemen produk</p>
+                <h1 class="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                    Tambah Produk
+                </h1>
+                <p class="mt-2 text-sm leading-6 text-slate-500">
+                    Masukkan informasi produk baru ke dalam sistem inventaris.
+                </p>
+            </div>
+        </section>
 
-        <form class="form-card" @submit.prevent="submit">
-            <div class="field">
-                <label for="nama">Nama Produk</label>
-                <input
-                    id="nama"
-                    v-model="form.nama"
-                    type="text"
-                    placeholder="Contoh: Keyboard Logitech"
-                >
-                <small v-if="form.errors.nama" class="error">
-                    {{ form.errors.nama }}
-                </small>
+        <form @submit.prevent="submit" class="max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="flex items-center gap-4 border-b border-slate-100 px-5 py-5 sm:px-8">
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-6 w-6">
+                        <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z" />
+                        <path d="m4.5 7.5 7.5 4.3 7.5-4.3M12 12v9" />
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="font-bold text-slate-900">Informasi Produk</h2>
+                    <p class="mt-1 text-xs text-slate-500">Kolom bertanda * wajib diisi.</p>
+                </div>
             </div>
 
-            <div class="field">
-                <label for="kategori">Kategori</label>
-                <input
-                    id="kategori"
-                    v-model="form.kategori"
-                    type="text"
-                    placeholder="Contoh: Elektronik"
-                >
-                <small v-if="form.errors.kategori" class="error">
-                    {{ form.errors.kategori }}
-                </small>
+            <div class="grid gap-x-6 gap-y-6 p-5 sm:grid-cols-2 sm:p-8">
+                <div class="sm:col-span-2">
+                    <label for="nama" class="mb-2 block text-sm font-semibold text-slate-700">
+                        Nama Produk <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        id="nama"
+                        v-model="form.nama"
+                        type="text"
+                        required
+                        maxlength="255"
+                        autofocus
+                        placeholder="Contoh: Keyboard Mechanical"
+                        class="w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                        :class="form.errors.nama ? 'border-red-300' : 'border-slate-200'"
+                    />
+                    <p v-if="form.errors.nama" class="mt-2 text-sm text-red-600">{{ form.errors.nama }}</p>
+                </div>
+
+                <div>
+                    <label for="kategori" class="mb-2 block text-sm font-semibold text-slate-700">
+                        Kategori <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        id="kategori"
+                        v-model="form.kategori"
+                        type="text"
+                        required
+                        maxlength="255"
+                        placeholder="Contoh: Elektronik"
+                        class="w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                        :class="form.errors.kategori ? 'border-red-300' : 'border-slate-200'"
+                    />
+                    <p v-if="form.errors.kategori" class="mt-2 text-sm text-red-600">{{ form.errors.kategori }}</p>
+                </div>
+
+                <div>
+                    <label for="harga" class="mb-2 block text-sm font-semibold text-slate-700">
+                        Harga Satuan <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex overflow-hidden rounded-xl border transition focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10" :class="form.errors.harga ? 'border-red-300' : 'border-slate-200'">
+                        <span class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-500">Rp</span>
+                        <input
+                            id="harga"
+                            v-model="form.harga"
+                            type="number"
+                            min="0"
+                            step="1"
+                            required
+                            placeholder="150000"
+                            class="min-w-0 flex-1 bg-white px-4 py-3 text-sm outline-none"
+                        />
+                    </div>
+                    <p v-if="form.errors.harga" class="mt-2 text-sm text-red-600">{{ form.errors.harga }}</p>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label for="stok" class="mb-2 block text-sm font-semibold text-slate-700">
+                        Jumlah Stok <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        id="stok"
+                        v-model="form.stok"
+                        type="number"
+                        min="0"
+                        step="1"
+                        required
+                        placeholder="20"
+                        class="w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                        :class="form.errors.stok ? 'border-red-300' : 'border-slate-200'"
+                    />
+                    <p class="mt-1.5 text-xs text-slate-400">Masukkan jumlah unit yang tersedia.</p>
+                    <p v-if="form.errors.stok" class="mt-2 text-sm text-red-600">{{ form.errors.stok }}</p>
+                </div>
             </div>
 
-            <div class="field">
-                <label for="harga">Harga (Rp)</label>
-                <input
-                    id="harga"
-                    v-model="form.harga"
-                    type="number"
-                    min="0"
-                    placeholder="Contoh: 250000"
-                >
-                <small v-if="form.errors.harga" class="error">
-                    {{ form.errors.harga }}
-                </small>
-            </div>
-
-            <div class="field">
-                <label for="stok">Stok</label>
-                <input
-                    id="stok"
-                    v-model="form.stok"
-                    type="number"
-                    min="0"
-                    placeholder="Contoh: 10"
-                >
-                <small v-if="form.errors.stok" class="error">
-                    {{ form.errors.stok }}
-                </small>
-            </div>
-
-            <div class="actions">
-                <button
-                    type="submit"
-                    class="btn-submit"
-                    :disabled="form.processing"
-                >
-                    {{ form.processing ? 'Menyimpan...' : 'Simpan Produk' }}
-                </button>
-
-                <Link href="/produk" class="btn-cancel">
+            <div class="flex flex-col-reverse gap-3 border-t border-slate-100 bg-slate-50/70 px-5 py-5 sm:flex-row sm:justify-end sm:px-8">
+                <Link href="/produk" class="inline-flex justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
                     Batal
                 </Link>
+                <button
+                    type="submit"
+                    :disabled="form.processing"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/15 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    <svg v-if="form.processing" viewBox="0 0 24 24" fill="none" class="h-4 w-4 animate-spin">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity=".25" stroke-width="3" />
+                        <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+                    </svg>
+                    {{ form.processing ? 'Menyimpan...' : 'Simpan Produk' }}
+                </button>
             </div>
         </form>
-    </main>
+    </AppLayout>
 </template>
-
-<style scoped>
-.container {
-    max-width: 800px;
-    margin: 50px auto;
-    padding: 0 24px;
-    font-family: Arial, sans-serif;
-    color: #1e293b;
-}
-
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 28px;
-}
-
-h1 {
-    margin: 0 0 8px;
-    font-size: 30px;
-}
-
-p {
-    margin: 0;
-    color: #64748b;
-    line-height: 1.5;
-}
-
-.form-card {
-    padding: 28px;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    background: white;
-    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
-}
-
-.field {
-    margin-bottom: 22px;
-}
-
-label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-input {
-    box-sizing: border-box;
-    width: 100%;
-    padding: 12px 14px;
-    border: 1px solid #cbd5e1;
-    border-radius: 7px;
-    font-size: 14px;
-    outline: none;
-}
-
-input:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px #dbeafe;
-}
-
-.error {
-    display: block;
-    margin-top: 6px;
-    color: #dc2626;
-}
-
-.actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 28px;
-}
-
-.btn-submit,
-.btn-back,
-.btn-cancel {
-    display: inline-block;
-    padding: 11px 16px;
-    border: none;
-    border-radius: 7px;
-    font-size: 14px;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.btn-submit {
-    background: #2563eb;
-    color: white;
-}
-
-.btn-submit:hover {
-    background: #1d4ed8;
-}
-
-.btn-submit:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.btn-back,
-.btn-cancel {
-    background: #f1f5f9;
-    color: #334155;
-}
-
-@media (max-width: 600px) {
-    .container {
-        margin: 28px auto;
-        padding: 0 14px;
-    }
-
-    .header {
-        align-items: flex-start;
-    }
-
-    .form-card {
-        padding: 20px;
-    }
-}
-</style>

@@ -1,302 +1,214 @@
-```vue
-<script setup>
-import { Link } from '@inertiajs/vue3';
 
-defineProps({
+<script setup>
+import { computed, ref } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import AppLayout from '../../layouts/AppLayout.vue';
+
+const props = defineProps({
     produks: {
         type: Array,
         default: () => [],
     },
 });
 
-const formatRupiah = (angka) => {
+const search = ref('');
+const page = usePage();
+
+const filteredProduks = computed(() => {
+    const keyword = search.value.trim().toLowerCase();
+
+    if (!keyword) return props.produks;
+
+    return props.produks.filter((produk) =>
+        [produk.nama, produk.kategori, String(produk.id)]
+            .some((value) => String(value ?? '').toLowerCase().includes(keyword))
+    );
+});
+
+const totalStok = computed(() =>
+    props.produks.reduce((sum, produk) => sum + Number(produk.stok || 0), 0)
+);
+
+const stokMenipis = computed(() =>
+    props.produks.filter((produk) => Number(produk.stok) <= 5).length
+);
+
+function rupiah(value) {
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
         maximumFractionDigits: 0,
-    }).format(angka);
-};
+    }).format(Number(value) || 0);
+}
+
+function hapusProduk(produk) {
+    if (!confirm(`Yakin ingin menghapus produk "${produk.nama}"?`)) return;
+
+    router.delete(`/produk/${produk.id}`, {
+        preserveScroll: true,
+    });
+}
 </script>
 
 <template>
-    <main class="container">
-        <header class="header">
+    <AppLayout>
+        <section class="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>
-                <h1>Data Produk</h1>
-                <p>Kelola inventaris produk kamu.</p>
+                <p class="text-sm font-semibold text-blue-600">Manajemen inventaris</p>
+                <h1 class="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                    Data Produk
+                </h1>
+                <p class="mt-2 text-sm leading-6 text-slate-500">
+                    Kelola seluruh produk, harga, kategori, dan ketersediaan stok.
+                </p>
             </div>
 
-            <div class="header-actions">
-                <span class="count">
-                    {{ produks.length }} produk
-                </span>
+            <Link href="/produk/create" class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/15 transition hover:-translate-y-0.5 hover:bg-blue-700">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4">
+                    <path d="M12 5v14M5 12h14" />
+                </svg>
+                Tambah Produk
+            </Link>
+        </section>
 
-                <Link href="/produk/create" class="btn-add">
-                    + Tambah Produk
-                </Link>
+        <!-- Summary -->
+        <section class="grid gap-4 sm:grid-cols-3">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <p class="text-sm font-medium text-slate-500">Total Jenis Produk</p>
+                <p class="mt-3 text-2xl font-bold text-slate-900">
+                    {{ props.produks.length.toLocaleString('id-ID') }}
+                </p>
+                <p class="mt-1 text-xs text-slate-400">Produk terdaftar</p>
             </div>
-        </header>
 
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>No.</th>
-                        <th>Nama Produk</th>
-                        <th>Kategori</th>
-                        <th>Harga</th>
-                        <th>Stok</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <p class="text-sm font-medium text-slate-500">Total Unit Stok</p>
+                <p class="mt-3 text-2xl font-bold text-slate-900">
+                    {{ totalStok.toLocaleString('id-ID') }}
+                </p>
+                <p class="mt-1 text-xs text-slate-400">Akumulasi seluruh produk</p>
+            </div>
 
-                <tbody>
-                    <tr
-                        v-for="(produk, index) in produks"
-                        :key="produk.id"
-                    >
-                        <td>{{ index + 1 }}</td>
-                        <td class="nama-produk">{{ produk.nama }}</td>
-                        <td>{{ produk.kategori }}</td>
-                        <td class="harga">
-                            {{ formatRupiah(produk.harga) }}
-                        </td>
-                        <td>
-                            <span
-                                class="stok"
-                                :class="{ 'stok-habis': produk.stok === 0 }"
-                            >
-                                {{ produk.stok }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="aksi">
-                                <Link
-                                    :href="`/produk/${produk.id}/edit`"
-                                    class="btn-edit"
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <p class="text-sm font-medium text-slate-500">Stok Menipis</p>
+                <p class="mt-3 text-2xl font-bold text-amber-600">
+                    {{ stokMenipis.toLocaleString('id-ID') }}
+                </p>
+                <p class="mt-1 text-xs text-slate-400">Stok 5 unit atau kurang</p>
+            </div>
+        </section>
+
+        <section class="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div v-if="page.props.flash?.success" class="mx-5 mt-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 sm:mx-6">
+                {{ page.props.flash.success }}
+            </div>
+
+            <div class="flex flex-col gap-4 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+                <div>
+                    <h2 class="font-bold text-slate-900">Semua Produk</h2>
+                    <p class="mt-1 text-sm text-slate-500">
+                        Menampilkan {{ filteredProduks.length }} dari {{ props.produks.length }} produk
+                    </p>
+                </div>
+
+                <div class="relative w-full sm:max-w-sm">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="m16 16 4 4" />
+                    </svg>
+                    <input
+                        v-model="search"
+                        type="search"
+                        placeholder="Cari nama, kategori, atau ID..."
+                        class="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
+                    />
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50/80 text-[11px] uppercase tracking-wider text-slate-500">
+                        <tr>
+                            <th class="px-5 py-4 font-semibold sm:px-6">Produk</th>
+                            <th class="px-5 py-4 font-semibold sm:px-6">Kategori</th>
+                            <th class="px-5 py-4 font-semibold sm:px-6">Harga</th>
+                            <th class="px-5 py-4 font-semibold sm:px-6">Stok</th>
+                            <th class="px-5 py-4 text-right font-semibold sm:px-6">Aksi</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-slate-100">
+                        <tr v-for="produk in filteredProduks" :key="produk.id" class="transition hover:bg-slate-50/70">
+                            <td class="whitespace-nowrap px-5 py-4 sm:px-6">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 font-bold text-blue-700">
+                                        {{ produk.nama?.charAt(0)?.toUpperCase() || 'P' }}
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-slate-800">{{ produk.nama }}</p>
+                                        <p class="mt-1 text-xs text-slate-400">ID #{{ produk.id }}</p>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="whitespace-nowrap px-5 py-4 text-slate-500 sm:px-6">
+                                {{ produk.kategori }}
+                            </td>
+
+                            <td class="whitespace-nowrap px-5 py-4 font-medium text-slate-700 sm:px-6">
+                                {{ rupiah(produk.harga) }}
+                            </td>
+
+                            <td class="whitespace-nowrap px-5 py-4 sm:px-6">
+                                <span
+                                    class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
+                                    :class="Number(produk.stok) <= 5 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'"
                                 >
-                                    Edit
-                                </Link>
-                            </div>
-                        </td>
-                    </tr>
+                                    <span class="h-1.5 w-1.5 rounded-full" :class="Number(produk.stok) <= 5 ? 'bg-amber-500' : 'bg-emerald-500'"></span>
+                                    {{ produk.stok }} unit
+                                </span>
+                            </td>
 
-                    <tr v-if="produks.length === 0">
-                        <td colspan="6" class="empty">
-                            <div class="empty-icon">📦</div>
-                            <h3>Belum Ada Produk</h3>
-                            <p>Mulai tambahkan produk ke inventaris kamu.</p>
+                            <td class="whitespace-nowrap px-5 py-4 sm:px-6">
+                                <div class="flex justify-end gap-2">
+                                    <Link
+                                        :href="`/produk/${produk.id}/edit`"
+                                        class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                    >
+                                        Edit
+                                    </Link>
+                                    <button
+                                        type="button"
+                                        @click="hapusProduk(produk)"
+                                        class="rounded-lg border border-red-100 px-3 py-2 text-xs font-semibold text-red-600 transition hover:border-red-200 hover:bg-red-50"
+                                    >
+                                        Hapus
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
 
-                            <Link href="/produk/create" class="btn-add">
-                                + Tambah Produk
-                            </Link>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                        <tr v-if="!filteredProduks.length">
+                            <td colspan="5" class="px-6 py-16 text-center">
+                                <p class="font-semibold text-slate-700">
+                                    {{ search ? 'Produk tidak ditemukan' : 'Belum ada produk' }}
+                                </p>
+                                <p class="mt-1 text-sm text-slate-500">
+                                    {{ search ? 'Coba kata kunci yang berbeda.' : 'Tambahkan produk pertama ke inventaris.' }}
+                                </p>
+                                <button v-if="search" type="button" @click="search = ''" class="mt-3 text-sm font-semibold text-blue-600 hover:text-blue-700">
+                                    Hapus pencarian
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-        <footer class="footer">
-            Menampilkan {{ produks.length }} produk
-        </footer>
-    </main>
+            <div class="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-xs text-slate-400 sm:px-6">
+                <span>{{ filteredProduks.length }} produk ditampilkan</span>
+                <span>Inventaris</span>
+            </div>
+        </section>
+    </AppLayout>
 </template>
-
-<style scoped>
-.container {
-    max-width: 1100px;
-    margin: 50px auto;
-    padding: 0 24px;
-    font-family: Arial, sans-serif;
-    color: #1e293b;
-}
-
-.header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    margin-bottom: 28px;
-}
-
-h1 {
-    margin: 0 0 8px;
-    font-size: 30px;
-    font-weight: 700;
-}
-
-p {
-    margin: 0;
-    color: #64748b;
-    line-height: 1.6;
-}
-
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.count {
-    padding: 10px 14px;
-    background: #e0f2fe;
-    color: #0369a1;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.btn-add,
-.btn-edit {
-    display: inline-block;
-    padding: 10px 15px;
-    color: white;
-    text-decoration: none;
-    border-radius: 7px;
-    font-size: 14px;
-    font-weight: 600;
-    transition: background-color 0.2s;
-    white-space: nowrap;
-}
-
-.btn-add {
-    background: #2563eb;
-}
-
-.btn-add:hover {
-    background: #1d4ed8;
-}
-
-.btn-edit {
-    background: #0d9488;
-}
-
-.btn-edit:hover {
-    background: #0f766e;
-}
-
-.table-wrapper {
-    overflow-x: auto;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    background: white;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-}
-
-th,
-td {
-    padding: 16px;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-th {
-    background: #f8fafc;
-    color: #475569;
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    white-space: nowrap;
-}
-
-td {
-    font-size: 14px;
-}
-
-tbody tr:hover {
-    background: #f8fafc;
-}
-
-tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.nama-produk {
-    font-weight: 600;
-    color: #0f172a;
-}
-
-.harga {
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.stok {
-    display: inline-block;
-    min-width: 32px;
-    padding: 5px 9px;
-    text-align: center;
-    border-radius: 6px;
-    background: #dcfce7;
-    color: #166534;
-    font-weight: 600;
-}
-
-.stok-habis {
-    background: #fee2e2;
-    color: #b91c1c;
-}
-
-.aksi {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.empty {
-    padding: 55px 20px;
-    text-align: center;
-    color: #64748b;
-}
-
-.empty-icon {
-    font-size: 42px;
-    margin-bottom: 12px;
-}
-
-.empty h3 {
-    margin: 0 0 8px;
-    color: #1e293b;
-    font-size: 20px;
-}
-
-.empty p {
-    margin-bottom: 20px;
-}
-
-.footer {
-    margin-top: 16px;
-    color: #64748b;
-    font-size: 13px;
-}
-
-@media (max-width: 640px) {
-    .container {
-        margin: 28px auto;
-        padding: 0 14px;
-    }
-
-    .header {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    h1 {
-        font-size: 25px;
-    }
-
-    th,
-    td {
-        padding: 12px;
-    }
-}
-</style>
-```

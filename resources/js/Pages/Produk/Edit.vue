@@ -1,89 +1,136 @@
+
 <script setup>
-import { useForm } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
+import AppLayout from '../../layouts/AppLayout.vue';
 
 const props = defineProps({
-    produk: Object,
+    produk: {
+        type: Object,
+        required: true,
+    },
 });
 
 const form = useForm({
-    nama: props.produk.nama,
-    kategori: props.produk.kategori,
-    harga: props.produk.harga,
-    stok: props.produk.stok,
+    nama: props.produk.nama ?? '',
+    kategori: props.produk.kategori ?? '',
+    harga: props.produk.harga ?? '',
+    stok: props.produk.stok ?? 0,
 });
 
-const submit = () => {
+function submit() {
     form.put(`/produk/${props.produk.id}`);
-};
+}
 </script>
 
 <template>
-    <main class="container">
-        <h1>Edit Produk</h1>
+    <AppLayout>
+        <section class="mb-8">
+            <Link href="/produk" class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-blue-600">
+                <span>←</span> Kembali ke produk
+            </Link>
+            <div class="mt-4">
+                <p class="text-sm font-semibold text-blue-600">Manajemen produk</p>
+                <h1 class="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                    Edit Produk
+                </h1>
+                <p class="mt-2 text-sm leading-6 text-slate-500">
+                    Perbarui informasi produk #{{ produk.id }}.
+                </p>
+            </div>
+        </section>
 
-        <form @submit.prevent="submit">
-            <div class="form-group">
-                <label>Nama Produk</label>
-                <input v-model="form.nama" type="text">
-                <small v-if="form.errors.nama">{{ form.errors.nama }}</small>
+        <form @submit.prevent="submit" class="max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="flex items-center gap-4 border-b border-slate-100 px-5 py-5 sm:px-8">
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-6 w-6">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" />
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="font-bold text-slate-900">Informasi Produk</h2>
+                    <p class="mt-1 text-xs text-slate-500">Ubah data yang ingin diperbarui.</p>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>Kategori</label>
-                <input v-model="form.kategori" type="text">
-                <small v-if="form.errors.kategori">{{ form.errors.kategori }}</small>
+            <div class="grid gap-x-6 gap-y-6 p-5 sm:grid-cols-2 sm:p-8">
+                <div class="sm:col-span-2">
+                    <label for="nama" class="mb-2 block text-sm font-semibold text-slate-700">Nama Produk *</label>
+                    <input
+                        id="nama"
+                        v-model="form.nama"
+                        type="text"
+                        required
+                        maxlength="255"
+                        class="w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                        :class="form.errors.nama ? 'border-red-300' : 'border-slate-200'"
+                    />
+                    <p v-if="form.errors.nama" class="mt-2 text-sm text-red-600">{{ form.errors.nama }}</p>
+                </div>
+
+                <div>
+                    <label for="kategori" class="mb-2 block text-sm font-semibold text-slate-700">Kategori *</label>
+                    <input
+                        id="kategori"
+                        v-model="form.kategori"
+                        type="text"
+                        required
+                        maxlength="255"
+                        class="w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                        :class="form.errors.kategori ? 'border-red-300' : 'border-slate-200'"
+                    />
+                    <p v-if="form.errors.kategori" class="mt-2 text-sm text-red-600">{{ form.errors.kategori }}</p>
+                </div>
+
+                <div>
+                    <label for="harga" class="mb-2 block text-sm font-semibold text-slate-700">Harga Satuan *</label>
+                    <div class="flex overflow-hidden rounded-xl border transition focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10" :class="form.errors.harga ? 'border-red-300' : 'border-slate-200'">
+                        <span class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-500">Rp</span>
+                        <input
+                            id="harga"
+                            v-model="form.harga"
+                            type="number"
+                            min="0"
+                            step="1"
+                            required
+                            class="min-w-0 flex-1 bg-white px-4 py-3 text-sm outline-none"
+                        />
+                    </div>
+                    <p v-if="form.errors.harga" class="mt-2 text-sm text-red-600">{{ form.errors.harga }}</p>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label for="stok" class="mb-2 block text-sm font-semibold text-slate-700">Jumlah Stok *</label>
+                    <input
+                        id="stok"
+                        v-model="form.stok"
+                        type="number"
+                        min="0"
+                        step="1"
+                        required
+                        class="w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                        :class="form.errors.stok ? 'border-red-300' : 'border-slate-200'"
+                    />
+                    <p v-if="form.errors.stok" class="mt-2 text-sm text-red-600">{{ form.errors.stok }}</p>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>Harga</label>
-                <input v-model="form.harga" type="number">
-                <small v-if="form.errors.harga">{{ form.errors.harga }}</small>
+            <div class="flex flex-col-reverse gap-3 border-t border-slate-100 bg-slate-50/70 px-5 py-5 sm:flex-row sm:justify-end sm:px-8">
+                <Link href="/produk" class="inline-flex justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
+                    Batal
+                </Link>
+                <button
+                    type="submit"
+                    :disabled="form.processing"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/15 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    <svg v-if="form.processing" viewBox="0 0 24 24" fill="none" class="h-4 w-4 animate-spin">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity=".25" stroke-width="3" />
+                        <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+                    </svg>
+                    {{ form.processing ? 'Menyimpan...' : 'Simpan Perubahan' }}
+                </button>
             </div>
-
-            <div class="form-group">
-                <label>Stok</label>
-                <input v-model="form.stok" type="number">
-                <small v-if="form.errors.stok">{{ form.errors.stok }}</small>
-            </div>
-
-            <button type="submit" :disabled="form.processing">
-                {{ form.processing ? 'Menyimpan...' : 'Update Produk' }}
-            </button>
         </form>
-    </main>
+    </AppLayout>
 </template>
-
-<style scoped>
-.container {
-    max-width: 600px;
-    margin: 50px auto;
-    padding: 0 24px;
-    font-family: Arial, sans-serif;
-}
-
-.form-group {
-    margin-bottom: 18px;
-}
-
-label {
-    display: block;
-    margin-bottom: 6px;
-}
-
-input {
-    width: 100%;
-    padding: 10px;
-    box-sizing: border-box;
-}
-
-small {
-    display: block;
-    color: red;
-    margin-top: 5px;
-}
-
-button {
-    padding: 10px 18px;
-    cursor: pointer;
-}
-</style>
