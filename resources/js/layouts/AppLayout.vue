@@ -10,6 +10,7 @@ const menus = [
     { label: 'Dashboard', href: '/', icon: 'dashboard' },
     { label: 'Data Produk', href: '/produk', icon: 'products' },
     { label: 'Riwayat Stok', href: '/riwayat-stok', icon: 'history' },
+    { label: 'Laporan', href: '/laporan', icon: 'history' },
 ];
 
 const currentTitle = computed(() => {

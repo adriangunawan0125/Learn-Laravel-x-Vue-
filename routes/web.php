@@ -3,6 +3,7 @@
 
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\RiwayatStokController;
+use App\Http\Controllers\LaporanController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -35,3 +36,12 @@ Route::get('/riwayat-stok/create', [RiwayatStokController::class, 'create'])
 
 Route::post('/riwayat-stok', [RiwayatStokController::class, 'store'])
     ->name('riwayat-stok.store');
+
+Route::get('/laporan', [LaporanController::class, 'index'])
+    ->name('laporan.index');
+
+Route::get('/laporan/export-csv', [LaporanController::class, 'exportCsv'])
+    ->name('laporan.export-csv');
+
+Route::get('/laporan/export-pdf', [LaporanController::class, 'exportPdf'])
+    ->name('laporan.export-pdf');
