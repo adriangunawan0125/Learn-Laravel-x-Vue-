@@ -3,12 +3,15 @@
 import { Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '../../layouts/AppLayout.vue';
 
+
 const form = useForm({
     nama: '',
     kategori: '',
     harga: '',
     stok: 0,
+    stok_minimum: 5,
 });
+
 
 function submit() {
     form.post('/produk');
@@ -120,6 +123,35 @@ function submit() {
                     <p class="mt-1.5 text-xs text-slate-400">Masukkan jumlah unit yang tersedia.</p>
                     <p v-if="form.errors.stok" class="mt-2 text-sm text-red-600">{{ form.errors.stok }}</p>
                 </div>
+                
+<div>
+    <label class="mb-2 block text-sm font-semibold text-slate-700">
+        Batas Minimum Stok
+    </label>
+
+    <input
+        v-model.number="form.stok_minimum"
+        type="number"
+        min="0"
+        max="1000000"
+        required
+        class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+        placeholder="Contoh: 5"
+    />
+
+    <p class="mt-1 text-xs text-slate-500">
+        Peringatan akan muncul ketika stok mencapai batas ini.
+    </p>
+
+    <p
+        v-if="form.errors.stok_minimum"
+        class="mt-2 text-sm text-red-600"
+    >
+        {{ form.errors.stok_minimum }}
+    </p>
+</div>
+
+
             </div>
 
             <div class="flex flex-col-reverse gap-3 border-t border-slate-100 bg-slate-50/70 px-5 py-5 sm:flex-row sm:justify-end sm:px-8">

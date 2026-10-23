@@ -1,18 +1,24 @@
 
 <script setup>
+import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import AppLayout from '../layouts/AppLayout.vue';
 
-defineProps({
+const props = defineProps({
     stats: {
         type: Object,
         default: () => ({
             totalProduk: 0,
             totalStok: 0,
             stokMenipis: 0,
+            stokHabis: 0,
         }),
     },
     produkTerbaru: {
+        type: Array,
+        default: () => [],
+    },
+    chartTransaksi: {
         type: Array,
         default: () => [],
     },
@@ -25,20 +31,41 @@ function rupiah(value) {
         maximumFractionDigits: 0,
     }).format(Number(value) || 0);
 }
+
+const nilaiMaksimumGrafik = computed(() => {
+    const semuaNilai = props.chartTransaksi.flatMap((item) => [
+        Number(item.masuk) || 0,
+        Number(item.keluar) || 0,
+    ]);
+
+    return Math.max(1, ...semuaNilai);
+});
+
+function statusStok(produk) {
+    const stok = Number(produk.stok) || 0;
+    const minimum = Number(produk.stok_minimum ?? 5);
+
+    if (stok <= 0) return 'habis';
+    if (stok <= minimum) return 'menipis';
+
+    return 'aman';
+}
 </script>
 
 <template>
     <AppLayout>
-        <!-- Page heading -->
+        <!-- Judul halaman -->
         <section class="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>
                 <div class="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
                     <span class="h-1.5 w-1.5 rounded-full bg-blue-600"></span>
                     Ringkasan inventaris
                 </div>
+
                 <h1 class="mt-4 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
                     Dashboard
                 </h1>
+
                 <p class="mt-2 text-sm leading-6 text-slate-500">
                     Selamat datang! Pantau kondisi produk dan persediaanmu di sini.
                 </p>
@@ -55,17 +82,18 @@ function rupiah(value) {
             </Link>
         </section>
 
-        <!-- Statistics -->
+        <!-- Statistik inventaris -->
         <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6">
                 <div class="flex items-start justify-between">
                     <div>
                         <p class="text-sm font-medium text-slate-500">Total Produk</p>
                         <p class="mt-4 text-3xl font-bold tracking-tight text-slate-900">
-                            {{ Number(stats.totalProduk || 0).toLocaleString('id-ID') }}
+                            {{ Number(props.stats.totalProduk || 0).toLocaleString('id-ID') }}
                         </p>
                         <p class="mt-2 text-xs text-slate-400">Jenis produk terdaftar</p>
                     </div>
+
                     <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-6 w-6">
                             <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z" />
@@ -73,6 +101,7 @@ function rupiah(value) {
                         </svg>
                     </div>
                 </div>
+
                 <div class="mt-5 border-t border-slate-100 pt-4">
                     <Link href="/produk" class="text-xs font-semibold text-blue-600 hover:text-blue-700">
                         Lihat data produk →
@@ -85,10 +114,11 @@ function rupiah(value) {
                     <div>
                         <p class="text-sm font-medium text-slate-500">Total Stok</p>
                         <p class="mt-4 text-3xl font-bold tracking-tight text-slate-900">
-                            {{ Number(stats.totalStok || 0).toLocaleString('id-ID') }}
+                            {{ Number(props.stats.totalStok || 0).toLocaleString('id-ID') }}
                         </p>
                         <p class="mt-2 text-xs text-slate-400">Unit dari seluruh produk</p>
                     </div>
+
                     <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-6 w-6">
                             <path d="M4 19V5m0 14h16" />
@@ -98,8 +128,11 @@ function rupiah(value) {
                         </svg>
                     </div>
                 </div>
+
                 <div class="mt-5 border-t border-slate-100 pt-4">
-                    <span class="text-xs font-medium text-slate-400">Akumulasi jumlah persediaan</span>
+                    <span class="text-xs font-medium text-slate-400">
+                        Akumulasi jumlah persediaan
+                    </span>
                 </div>
             </article>
 
@@ -108,10 +141,13 @@ function rupiah(value) {
                     <div>
                         <p class="text-sm font-medium text-slate-500">Stok Menipis</p>
                         <p class="mt-4 text-3xl font-bold tracking-tight text-slate-900">
-                            {{ Number(stats.stokMenipis || 0).toLocaleString('id-ID') }}
+                            {{ Number(props.stats.stokMenipis || 0).toLocaleString('id-ID') }}
                         </p>
-                        <p class="mt-2 text-xs text-slate-400">Produk dengan stok maksimal 5</p>
+                        <p class="mt-2 text-xs text-slate-400">
+                            Mengikuti batas minimum setiap produk
+                        </p>
                     </div>
+
                     <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-6 w-6">
                             <path d="M12 3 2.8 20h18.4L12 3Z" />
@@ -119,15 +155,100 @@ function rupiah(value) {
                         </svg>
                     </div>
                 </div>
+
                 <div class="mt-5 border-t border-slate-100 pt-4">
-                    <span class="text-xs font-medium" :class="Number(stats.stokMenipis) > 0 ? 'text-amber-600' : 'text-emerald-600'">
-                        {{ Number(stats.stokMenipis) > 0 ? 'Perlu pemeriksaan stok' : 'Semua stok dalam batas aman' }}
+                    <span
+                        class="text-xs font-medium"
+                        :class="Number(props.stats.stokMenipis) > 0 || Number(props.stats.stokHabis) > 0 ? 'text-amber-600' : 'text-emerald-600'"
+                    >
+                        {{
+                            Number(props.stats.stokMenipis) > 0 || Number(props.stats.stokHabis) > 0
+                                ? 'Ada stok yang perlu diperiksa'
+                                : 'Semua stok dalam batas aman'
+                        }}
                     </span>
                 </div>
             </article>
         </section>
 
-        <!-- Latest products -->
+        <!-- Grafik pergerakan stok -->
+        <section class="mt-7 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">
+                        Grafik Pergerakan Stok
+                    </h2>
+                    <p class="mt-1 text-sm text-slate-500">
+                        Perbandingan barang masuk dan keluar selama enam bulan terakhir.
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap gap-4 text-xs font-medium text-slate-600">
+                    <span class="flex items-center gap-2">
+                        <span class="h-3 w-3 rounded-sm bg-blue-600"></span>
+                        Barang masuk
+                    </span>
+                    <span class="flex items-center gap-2">
+                        <span class="h-3 w-3 rounded-sm bg-amber-500"></span>
+                        Barang keluar
+                    </span>
+                </div>
+            </div>
+
+            <div v-if="props.chartTransaksi.length" class="mt-8">
+                <div class="grid grid-cols-3 gap-4 sm:grid-cols-6 sm:gap-5">
+                    <div
+                        v-for="(item, index) in props.chartTransaksi"
+                        :key="`${item.bulan}-${index}`"
+                        class="min-w-0 text-center"
+                    >
+                        <div class="flex h-56 items-end justify-center gap-1 border-b border-slate-100 pb-2 sm:gap-2">
+                            <div class="flex h-full w-1/2 max-w-8 flex-col justify-end">
+                                <span class="mb-1 text-[10px] font-semibold text-blue-700 sm:text-xs">
+                                    {{ item.masuk }}
+                                </span>
+                                <div
+                                    class="w-full rounded-t-md bg-blue-600 transition-all"
+                                    :style="{
+                                        height: `${(Number(item.masuk) || 0) / nilaiMaksimumGrafik * 75}%`,
+                                        minHeight: Number(item.masuk) > 0 ? '4px' : '0',
+                                    }"
+                                    :title="`Barang masuk: ${item.masuk} unit`"
+                                ></div>
+                            </div>
+
+                            <div class="flex h-full w-1/2 max-w-8 flex-col justify-end">
+                                <span class="mb-1 text-[10px] font-semibold text-amber-700 sm:text-xs">
+                                    {{ item.keluar }}
+                                </span>
+                                <div
+                                    class="w-full rounded-t-md bg-amber-500 transition-all"
+                                    :style="{
+                                        height: `${(Number(item.keluar) || 0) / nilaiMaksimumGrafik * 75}%`,
+                                        minHeight: Number(item.keluar) > 0 ? '4px' : '0',
+                                    }"
+                                    :title="`Barang keluar: ${item.keluar} unit`"
+                                ></div>
+                            </div>
+                        </div>
+
+                        <p class="mt-3 truncate text-xs font-semibold text-slate-600">
+                            {{ item.bulan }}
+                        </p>
+                    </div>
+                </div>
+
+                <p class="mt-4 text-xs text-slate-400">
+                    Angka di atas batang menunjukkan jumlah unit yang tercatat.
+                </p>
+            </div>
+
+            <div v-else class="py-12 text-center text-sm text-slate-500">
+                Data grafik belum tersedia.
+            </div>
+        </section>
+
+        <!-- Produk terbaru -->
         <section class="mt-7 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="flex flex-col gap-3 border-b border-slate-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <div>
@@ -136,12 +257,13 @@ function rupiah(value) {
                         Daftar produk yang terakhir ditambahkan.
                     </p>
                 </div>
+
                 <Link href="/produk" class="text-sm font-semibold text-blue-600 hover:text-blue-700">
                     Lihat semua →
                 </Link>
             </div>
 
-            <div v-if="produkTerbaru.length" class="overflow-x-auto">
+            <div v-if="props.produkTerbaru.length" class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead class="bg-slate-50/80 text-[11px] uppercase tracking-wider text-slate-500">
                         <tr>
@@ -151,32 +273,67 @@ function rupiah(value) {
                             <th class="px-5 py-4 font-semibold sm:px-6">Stok</th>
                         </tr>
                     </thead>
+
                     <tbody class="divide-y divide-slate-100">
-                        <tr v-for="produk in produkTerbaru" :key="produk.id" class="transition hover:bg-slate-50/70">
+                        <tr
+                            v-for="produk in props.produkTerbaru"
+                            :key="produk.id"
+                            class="transition hover:bg-slate-50/70"
+                        >
                             <td class="whitespace-nowrap px-5 py-4 sm:px-6">
                                 <div class="flex items-center gap-3">
                                     <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 font-bold text-blue-700">
                                         {{ produk.nama?.charAt(0)?.toUpperCase() || 'P' }}
                                     </div>
                                     <div>
-                                        <p class="font-semibold text-slate-800">{{ produk.nama }}</p>
-                                        <p class="mt-1 text-xs text-slate-400">ID #{{ produk.id }}</p>
+                                        <p class="font-semibold text-slate-800">
+                                            {{ produk.nama }}
+                                        </p>
+                                        <p class="mt-1 text-xs text-slate-400">
+                                            ID #{{ produk.id }}
+                                        </p>
                                     </div>
                                 </div>
                             </td>
+
                             <td class="whitespace-nowrap px-5 py-4 text-slate-500 sm:px-6">
                                 {{ produk.kategori }}
                             </td>
+
                             <td class="whitespace-nowrap px-5 py-4 font-medium text-slate-700 sm:px-6">
                                 {{ rupiah(produk.harga) }}
                             </td>
+
                             <td class="whitespace-nowrap px-5 py-4 sm:px-6">
-                                <span
-                                    class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
-                                    :class="Number(produk.stok) <= 5 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'"
-                                >
-                                    {{ produk.stok }} unit
-                                </span>
+                                <div class="flex flex-col items-start gap-1.5">
+                                    <span
+                                        class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
+                                        :class="{
+                                            'bg-red-50 text-red-700': statusStok(produk) === 'habis',
+                                            'bg-amber-50 text-amber-700': statusStok(produk) === 'menipis',
+                                            'bg-emerald-50 text-emerald-700': statusStok(produk) === 'aman',
+                                        }"
+                                    >
+                                        {{ produk.stok }} unit
+                                    </span>
+
+                                    <span
+                                        class="text-xs font-medium"
+                                        :class="{
+                                            'text-red-600': statusStok(produk) === 'habis',
+                                            'text-amber-600': statusStok(produk) === 'menipis',
+                                            'text-emerald-600': statusStok(produk) === 'aman',
+                                        }"
+                                    >
+                                        {{
+                                            statusStok(produk) === 'habis'
+                                                ? 'Stok Habis'
+                                                : statusStok(produk) === 'menipis'
+                                                    ? 'Stok Menipis'
+                                                    : 'Aman'
+                                        }}
+                                    </span>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -190,9 +347,16 @@ function rupiah(value) {
                         <path d="m4.5 7.5 7.5 4.3 7.5-4.3M12 12v9" />
                     </svg>
                 </div>
+
                 <h3 class="mt-4 font-bold text-slate-800">Belum ada produk</h3>
-                <p class="mt-1 text-sm text-slate-500">Tambahkan produk pertama untuk mengisi inventaris.</p>
-                <Link href="/produk/create" class="mt-5 inline-flex rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
+                <p class="mt-1 text-sm text-slate-500">
+                    Tambahkan produk pertama untuk mengisi inventaris.
+                </p>
+
+                <Link
+                    href="/produk/create"
+                    class="mt-5 inline-flex rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+                >
                     Tambah Produk
                 </Link>
             </div>

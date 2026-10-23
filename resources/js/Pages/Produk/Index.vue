@@ -30,9 +30,12 @@ const totalStok = computed(() =>
 );
 
 const stokMenipis = computed(() =>
-    props.produks.filter((produk) => Number(produk.stok) <= 5).length
+    props.produks.filter(
+        (produk) =>
+            Number(produk.stok) > 0 &&
+            Number(produk.stok) <= Number(produk.stok_minimum ?? 5)
+    ).length
 );
-
 function rupiah(value) {
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
@@ -159,15 +162,60 @@ function hapusProduk(produk) {
                                 {{ rupiah(produk.harga) }}
                             </td>
 
-                            <td class="whitespace-nowrap px-5 py-4 sm:px-6">
-                                <span
-                                    class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
-                                    :class="Number(produk.stok) <= 5 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'"
-                                >
-                                    <span class="h-1.5 w-1.5 rounded-full" :class="Number(produk.stok) <= 5 ? 'bg-amber-500' : 'bg-emerald-500'"></span>
-                                    {{ produk.stok }} unit
-                                </span>
-                            </td>
+                          
+<td class="whitespace-nowrap px-5 py-4 sm:px-6">
+    <div class="flex flex-col items-start gap-1.5">
+        <span
+            class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
+            :class="
+                Number(produk.stok) === 0
+                    ? 'bg-red-50 text-red-700'
+                    : Number(produk.stok) <= Number(produk.stok_minimum ?? 5)
+                        ? 'bg-amber-50 text-amber-700'
+                        : 'bg-emerald-50 text-emerald-700'
+            "
+        >
+            <span
+                class="h-1.5 w-1.5 rounded-full"
+                :class="
+                    Number(produk.stok) === 0
+                        ? 'bg-red-500'
+                        : Number(produk.stok) <= Number(produk.stok_minimum ?? 5)
+                            ? 'bg-amber-500'
+                            : 'bg-emerald-500'
+                "
+            ></span>
+
+            {{ produk.stok }} unit
+        </span>
+
+        <span class="text-xs text-slate-400">
+            Minimum {{ produk.stok_minimum ?? 5 }} unit
+        </span>
+
+        <span
+            v-if="Number(produk.stok) === 0"
+            class="text-xs font-semibold text-red-600"
+        >
+            Stok Habis
+        </span>
+
+        <span
+            v-else-if="Number(produk.stok) <= Number(produk.stok_minimum ?? 5)"
+            class="text-xs font-semibold text-amber-600"
+        >
+            Stok Menipis
+        </span>
+
+        <span
+            v-else
+            class="text-xs font-semibold text-emerald-600"
+        >
+            Aman
+        </span>
+    </div>
+</td>
+
 
                             <td class="whitespace-nowrap px-5 py-4 sm:px-6">
                                 <div class="flex justify-end gap-2">
